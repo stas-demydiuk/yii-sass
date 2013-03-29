@@ -5,9 +5,13 @@ class Sass extends CApplicationComponent
 
     public $sassPathAlias = 'application.vendor.richthegeek.phpsass';
     public $syntax = 'scss';
+
     public $cache = false;
     public $debug = false;
     public $debugInfo = false;
+    public $lineNumbers = false;
+    public $style = 'nested';
+
     public $functions = array();
     public $extensions = array();
     public $includePaths = array();
@@ -24,7 +28,7 @@ class Sass extends CApplicationComponent
      */
     public function init()
     {
-        Yii::import($this->sassPathAlias);
+        Yii::import($this->sassPathAlias.'.SassParser');
 
         $functions = array();
         $paths = array();
@@ -58,8 +62,10 @@ class Sass extends CApplicationComponent
             'debug' => $this->debug,
             'debug_info' => $this->debugInfo,
             'functions' => array_merge($functions, $this->functions),
+            'line_numbers' => $this->lineNumbers,
             'load_paths' => $paths,
             'syntax' => $this->syntax,
+            'style' => $this->style,
         );
 
         $this->sass = new SassParser($options);
@@ -69,6 +75,7 @@ class Sass extends CApplicationComponent
      * Compile SASS and registers a CSS file
      * @param string $file path to scss file
      * @param string $media media that the CSS file should be applied to. If empty, it means all media types.
+     * @param boolean $force SASS file will always be compiled if set to true (useful for development mode)
      * @return Sass the Sass object itself (to support method chaining).
      */
     public function registerFile($file, $media = '', $force = FALSE)
@@ -84,7 +91,7 @@ class Sass extends CApplicationComponent
             chmod($dstDir, 0777);
         }
 
-        if (!file_exists($dstFile) || $force)
+        if (!file_exists($dstFile) || $force || !$this->cache)
             file_put_contents($dstFile, $this->sass->toCss($file));
 
         $url = Yii::app()->assetManager->getPublishedUrl($pathParts['dirname']);
@@ -98,7 +105,7 @@ class Sass extends CApplicationComponent
      */
     public function getVersion()
     {
-        return '1.0.0';
+        return '1.0.1';
     }
 
 }
